@@ -22,7 +22,12 @@
 			game.report = function(msg) { document.getElementById("reporter").innerHTML = msg; };
 
 			function start() {
-				game.addPlayer(new TicTacToe.AIPlayer());
+				document.getElementById("btnRestart").style.display = "block";
+				document.getElementById("btnStart").style.display = "none";
+				var human = new TicTacToe.HumanPlayer();
+				game.addPlayer(human);
+				human.setFieldPrefix("pos");
+				//game.addPlayer(new TicTacToe.AIPlayer());
 				game.addPlayer(new TicTacToe.AIPlayer());
 				game.start();
 			}
@@ -62,8 +67,8 @@
 				</td>
 				<td>
 					<p id="reporter"></p>
-					<button onclick="start()">Start</button>
-					<button onclick="restart()">Restart</button>
+					<button id="btnStart" onclick="start()">Start</button>
+					<button id="btnRestart" onclick="restart()" style="display: none">Restart</button>
 				</td>
 			</tr>
 		</table>

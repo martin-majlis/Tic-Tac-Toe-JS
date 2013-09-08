@@ -4,6 +4,7 @@ var TicTacToe = {
 			players: [],
 			playersCount: 0,
 			board: null,
+			actSign: null,
 
 			addPlayer: function(player) {
 				var sign = self.board.signs[self.playersCount++];
@@ -15,22 +16,29 @@ var TicTacToe = {
 			},
 			setBoard: function(board) {
 				self.board = board;
+				board.game = self;
 			},
 			
 			start: function() {
-				var maxTurns = self.board.getDimension() * self.board.getDimension(); 
-				do {
-					var sign = self.board.getNextSign();
-					var player = self.players[sign];
-					player.turn(self.board);
-					console.debug(self.board.turn + ":\n" + self.board.toString());
-				} while ( ( ! self.board.isOver(sign) ) && ! self.board.isFull() );
+				self.actSign = self.board.getNextSign();
+ 				self.nextTurn();
+			},
 
-				var msg = "Draw";
-				if ( self.turn < maxTurns ) {
-					msg = "Player " + sign + " win!!!";
+			nextTurn: function() {
+				if (self.board.isOver(self.actSign) || self.board.isFull() ) {
+					var msg = "Draw";
+					if ( ! self.board.isFull() ) {
+						var player = self.players[self.actSign];
+						msg = player.name + " win!!!";
+					}
+					self.report(msg);
+				} else {
+					self.actSign = self.board.getNextSign();
+					var player = self.players[self.actSign];
+					self.report(player.name + " turn");
+					player.turn(self.board);
 				}
-				self.report(msg);
+
 			},
 
 			restart: function() {
@@ -162,6 +170,9 @@ var TicTacToe = {
 			clone: function() {
 				var copy = new TicTacToe.Board();
 				for (var i in self) {
+					if (i == "game") {
+						continue;
+					}
 					if (typeof(self[i]) != "function") {
 //						console.debug("Cloning property " + i);
 						copy[i] = clone(self[i]);
@@ -179,6 +190,10 @@ var TicTacToe = {
 						}
 					}
 				}
+			},
+	
+			nextTurn: function(){
+				self.game.nextTurn();
 			}
 
 		}
@@ -191,6 +206,7 @@ var TicTacToe = {
 
 	RandomPlayer: function() {
 		var self = {
+			name: "Random",
 			turn: function(board) {
 				var dim = board.getDimension();
 				do {
@@ -199,8 +215,64 @@ var TicTacToe = {
 				} while ( ! board.isEmpty(row, column) );
 
 				board.putStone(row, column);
+				board.nextTurn();
 			},
 			init: function(board) {}
+		}
+
+		return self;
+	},
+
+	HumanPlayer: function() {
+		var self = {
+			name: "Human",
+			strategy: null,
+			board: null,
+			waiting: true,
+			row: null,
+			column: null,
+
+			turn: function(board) {
+				self.board = board;
+				if (self.waiting) {
+					setTimeout(function() {
+						self.turn(board);
+					}, 200);
+				} else {
+					self.waiting = true;
+					board.putStone(self.row, self.column);
+					board.nextTurn();
+				}
+			},
+			doTurn: function(row, column) {
+				if (self.board.isEmpty(row, column)) {
+					self.row = row;
+					self.column = column;
+					self.waiting = false;
+				}
+			},
+
+			init: function(board) {
+				self.board = board;
+			},
+			setFieldPrefix: function(prefix) {
+				for (var i = 0; i < self.board.getDimension(); i++) {
+	 				for (var j = 0; j < self.board.getDimension(); j++) {
+						var el = document.getElementById(prefix + i + j);
+						var obj = { i: i, j: j };
+						var f = function(obj) {
+							console.log("Click on " + obj.i + ", " + obj.j);
+						};
+						el.onclick = function(evt) {
+							var id = evt.target.id;
+							var match = id.match(/(\d)(\d)/);
+							var i = parseInt(match[1]);
+							var j = parseInt(match[2]);
+							self.doTurn(i, j);						
+						}
+					}
+				}
+			}
 		}
 
 		return self;
@@ -209,10 +281,12 @@ var TicTacToe = {
 	AIPlayer: function() {
 		var self = {
 			strategy: null,
+			name: "AI",
 
 			turn: function(board) {
 				var turn = self.getTurn(board);
 				board.putStone(turn.row, turn.column);
+				board.nextTurn();
 			},
 
 			getTurn: function(board) {
