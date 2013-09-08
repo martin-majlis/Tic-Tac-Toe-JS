@@ -4,7 +4,6 @@ var TicTacToe = {
 			players: [],
 			playersCount: 0,
 			board: null,
-			turn: 0,
 
 			addPlayer: function(player) {
 				var sign = self.board.signs[self.playersCount++];
@@ -24,15 +23,19 @@ var TicTacToe = {
 					var sign = self.board.getNextSign();
 					var player = self.players[sign];
 					player.turn(self.board);
-					console.debug(self.turn + ":\n" + self.board.toString());
-					self.turn++;
-				} while ( ( ! self.board.isOver(sign) ) && self.turn < maxTurns );
+					console.debug(self.board.turn + ":\n" + self.board.toString());
+				} while ( ( ! self.board.isOver(sign) ) && ! self.board.isFull() );
 
 				var msg = "Draw";
 				if ( self.turn < maxTurns ) {
 					msg = "Player " + sign + " win!!!";
 				}
 				self.report(msg);
+			},
+
+			restart: function() {
+				self.board.restart();
+				self.start();
 			}
 		}
 
@@ -49,6 +52,7 @@ var TicTacToe = {
 			signs: [],
 
 			init: function() {
+				self.turn = 0;
 				self.board = [];
 				self._realSize = self.SIZE + 2;
 				for (var i = 0; i < self._realSize; i++) {
@@ -164,6 +168,17 @@ var TicTacToe = {
 					}
 				}
 				return copy;
+			},
+
+			restart: function() {
+				self.init();
+				for (var i = 0; i < self.SIZE; i++) {
+					for (var j = 0; j < self.SIZE; j++) {
+						if (self.mapping) {
+							self.mapping(i, j, "&nbsp;");
+						}
+					}
+				}
 			}
 
 		}
@@ -202,16 +217,20 @@ var TicTacToe = {
 
 			getTurn: function(board) {
 				var strategy = self.strategy[board.toString() + self.sign];
-				var maxScore = -100;
-				var maxMove = null;
+				var maxScore = -1000;
+				var options = [];
+
 				for(var k in strategy) {
 					if (strategy.hasOwnProperty(k)) {
 						if (strategy[k] > maxScore) {
 							maxScore = strategy[k];
-							maxMove = k;
+							options = [k];
+						} else if (strategy[k] == maxScore) {
+							options.push(k);
 						}
 					}
 				}
+				var maxMove = options[Math.floor(options.length * Math.random())];
 				var split = maxMove.split(",");
 				return { 
 					row: parseInt(split[0]),

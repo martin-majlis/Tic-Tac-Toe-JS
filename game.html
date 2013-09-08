@@ -3,57 +3,70 @@
 		<title>Tic Tac Toe</title>
 		<script src="tictactoe.js"></script>
 		<script>
-			window.onload = function() {
-				var game = new TicTacToe.Game();
-				var board = new TicTacToe.Board();
-				game.setBoard(board);
+			var game = new TicTacToe.Game();
+			var board = new TicTacToe.Board();
+			game.setBoard(board);
 
-				board.setSigns(["A", "B"]);
+			board.setSigns(["A", "B"]);
 
-				//game.addPlayer(new TicTacToe.RandomPlayer());
+			//game.addPlayer(new TicTacToe.RandomPlayer());
+			//game.addPlayer(new TicTacToe.AIPlayer());
+			//game.addPlayer(new TicTacToe.AIPlayer());
+
+			board.mapping = function (row, column, value) { 
+				var id = "pos" + row + "" + column;
+				console.debug("id: " + id);
+				document.getElementById(id).innerHTML = value; 
+			};				
+
+			game.report = function(msg) { document.getElementById("reporter").innerHTML = msg; };
+
+			function start() {
 				game.addPlayer(new TicTacToe.AIPlayer());
 				game.addPlayer(new TicTacToe.AIPlayer());
-
-				board.mapping = function (row, column, value) { 
-					var id = "pos" + row + "" + column;
-					console.debug("id: " + id);
-					document.getElementById(id).innerHTML = value; 
-				};				
-
-				game.report = function(msg) { document.getElementById("reporter").innerHTML = msg; };
-
-				setTimeout(function() { game.start(); }, 2000);
+				game.start();
 			}
+
+			function restart() {
+				game.restart();
+			}
+
 		</script>
 		<style>
-			td { width: 100px; height: 100px; font-size: 5em; text-align: center; vertical-align: center; border: 1px solid black; };
+			#board td { width: 100px; height: 100px; font-size: 5em; text-align: center; vertical-align: center; border: 1px solid black; };
 		</style>
 	</head>
 
 	<body>
 
-
-		<p id="reporter">&nbsp;</p>
-
-
 		<table align="center">
 			<tr>
-				<td id="pos00">&nbsp;</td>
-				<td id="pos01">&nbsp;</td>
-				<td id="pos02">&nbsp;</td>
-			</tr>
-			<tr>
-				<td id="pos10">&nbsp;</td>
-				<td id="pos11">&nbsp;</td>
-				<td id="pos12">&nbsp;</td>
-			</tr>
-			<tr>
-				<td id="pos20">&nbsp;</td>
-				<td id="pos21">&nbsp;</td>
-				<td id="pos22">&nbsp;</td>
+				<td>
+					<table align="center" id="board">
+						<tr>
+							<td id="pos00">&nbsp;</td>
+							<td id="pos01">&nbsp;</td>
+							<td id="pos02">&nbsp;</td>
+						</tr>
+						<tr>
+							<td id="pos10">&nbsp;</td>
+							<td id="pos11">&nbsp;</td>
+							<td id="pos12">&nbsp;</td>
+						</tr>
+						<tr>
+							<td id="pos20">&nbsp;</td>
+							<td id="pos21">&nbsp;</td>
+							<td id="pos22">&nbsp;</td>
+						</tr>
+					</table>
+				</td>
+				<td>
+					<p id="reporter"></p>
+					<button onclick="start()">Start</button>
+					<button onclick="restart()">Restart</button>
+				</td>
 			</tr>
 		</table>
-
 
 	</body>
 </html>
