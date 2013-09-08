@@ -246,12 +246,15 @@ var TicTacToe = {
 				var board = officialBoard.clone();
 				self.sign = selfSign;
 				self.strategy = {};
+				var beginTime = new Date().getTime();
 				var result = self.simulate(board, board.getNextSign());
+				var endTime = new Date().getTime();
+
+				console.info("Simulation time: " + (endTime - beginTime));
 			},
 
 			simulate: function(board, sign) {
-				console.debug("Simulate turn: " + board.turn + " with sign " + sign);
-				console.debug(board.toString());
+				//console.debug("Simulate turn: " + board.turn + " with sign " + sign);
 				var code = board.toString() + sign;
 				var strategy = self.strategy[code];
 				if (strategy) {
@@ -259,44 +262,51 @@ var TicTacToe = {
 				}
 
 				var result = {};
-				var losing = {};
+				var toSolve = [];
+				var isWinning = false;
 				space_search:
 				for (var i = 0; i < board.getDimension(); i++) {
 					for (var j = 0; j < board.getDimension(); j++) {
 						if (board.isEmpty(i, j)) {
-							// lets, simulate turn
 							var actBoard = board.clone();
 							actBoard.putStone(i, j);
-							var score = 0;
-							if (actBoard.isOver(sign)) {
-								score = 100;
-								result = {};
-								result[i + "," + j] = score;
+							if (actBoard.isOver(sign)) {								
+								result[i + "," + j] = 100;
+								isWinning = true;
 								break space_search;
-							} else if (actBoard.isFull()) {
-								score = 0; 
 							} else {
-								var flipSign = actBoard.getNextSign();
-								var res = self.simulate(actBoard, flipSign);
-								var losing = false;
-								var count = 0;
-								for(var k in res) {
-									if (res.hasOwnProperty(k)) {
-										score += -1 * res[k];
-										if (score == -100) {
-											losing = true;
-										}
-										count++;
-									}
-								}
-								score /= count;
-								// it's better finish the game than block
-								score -= 1;
+								toSolve.push({i:i, j:j, board: actBoard});
 							}
-							result[i + "," + j] = score;
 						}
 					}
 				}
+				if ( ! isWinning ) {
+					for (var l = 0; l < toSolve.length; l++) {
+						var pos = toSolve[l];
+						var actBoard = pos.board;
+						var i = pos.i;
+						var j = pos.j;				
+						var score = 0;
+						if (actBoard.isFull()) {
+							score = 0; 	
+						} else {
+							var flipSign = actBoard.getNextSign();
+							var res = self.simulate(actBoard, flipSign);
+							var count = 0;
+							for(var k in res) {
+								if (res.hasOwnProperty(k)) {
+									score += -1 * res[k];
+									count++;
+								}
+							}
+							score /= count;
+							// it's better finish the game than block
+							score -= 1;
+						}
+						result[i + "," + j] = score;
+					}
+				}
+
 				self.strategy[code] = result;
 				return result;
 			}
